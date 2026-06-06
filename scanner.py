@@ -180,23 +180,44 @@ def detect_answers(warped, total_soal=50):
 #  HEATMAP BUBBLE
 # ════════════════════════════════════════════════════
 def get_heatmap(warped):
-    """
-    Input : warped BGR numpy array (1000x1414)
-    Output: RGB numpy array heatmap area jawaban
-    """
-    # Crop area jawaban keseluruhan
-    y1, y2 = 930, 1390
-    x1, x2 = 70, 950
-    roi = warped[y1:y2, x1:x2]
-    gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
 
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-    eq    = clahe.apply(gray)
-    inv   = cv2.bitwise_not(eq)
+    CHOICES = ['A','B','C','D','E']
+    ROI_JAWABAN = [
+        (70,  930, 190, 1150,  1),
+        (70, 1160, 190, 1390, 11),
+        (250,  930, 380, 1150, 21),
+        (259, 1160, 380, 1390, 31),
+        (450,  930, 580, 1150, 41),
+        (450, 1160, 580, 1390, 51),
+        (650,  930, 780, 1150, 61),
+        (650, 1160, 780, 1390, 71),
+        (830,  930, 950, 1150, 81),
+        (830, 1160, 950, 1390, 91),
+    ]
 
-    # Normalize ke 0-255 untuk colormap
-    norm  = cv2.normalize(inv, None, 0, 255, cv2.NORM_MINMAX)
-    heatmap_bgr = cv2.applyColorMap(norm, cv2.COLORMAP_JET)
-    blended = cv2.addWeighted(roi, 0.4, heatmap_bgr, 0.6, 0)
+    fig, axes = plt.subplots(2, 5, figsize=(18, 6), facecolor='#111844')
+    for idx, (x1, y1, x2, y2, q_start) in enumerate(ROI_JAWABAN):
+        roi_gray = cv2.cvtColor(warped[y1:y2, x1:x2], cv2.COLOR_BGR2GRAY)
+        _, dm, b0, b1, rh, cw = scan_grid(roi_gray, num_cols=5, num_rows=10,
+                                           labels=CHOICES, per_row=True)
+        ax = axes[idx//5][idx%5]
+        ax.set_facecolor('#0C1235')
+        im = ax.imshow(dm, aspect='auto', cmap='RdYlGn',
+                       interpolation='nearest', vmin=-3, vmax=3)
+        ax.set_yticks(range(10))
+        ax.set_yticklabels([str(q_start+i) for i in range(10)], fontsize=6, color='#EAE0CF')
+        ax.set_xticks(range(5))
+        ax.set_xticklabels(CHOICES, fontsize=7, color='#EAE0CF')
+        for sp in ax.spines.values(): sp.set_color('#4B5694')
 
-    return cv2.cvtColor(blended, cv2.COLOR_BGR2RGB)
+    plt.tight_layout(pad=1.0)
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=100, bbox_inches='tight',
+                facecolor='#111844')
+    plt.close(fig)
+    buf.seek(0)
+    img_arr = np.frombuffer(buf.getvalue(), dtype=np.uint8)
+    return cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
