@@ -1,0 +1,9 @@
+opencv-python-headless
+numpy
+matplotlib
+pillow
+easyocr
+scikit-learn
+scikit-image
+tensorflow-datasets
+openpyxl
