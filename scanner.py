@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import os
 import pickle
+import io
 
 from utils.warp import detect_corner_squares, perspective_warp
 from utils.bubble_scan import scan_grid, apply_clahe
