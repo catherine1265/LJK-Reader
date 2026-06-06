@@ -6,7 +6,8 @@ import pickle
 from utils.warp import detect_corner_squares, perspective_warp
 from utils.bubble_scan import scan_grid, apply_clahe
 from utils.augment import extract_hog, CHAR_H, CHAR_W
-from train.train_model import load_or_train, N_CHARS
+from train.train_model import load_or_train
+from utils.ocr_svm import N_CHARS
 
 MODEL_PATH = 'svm_emnist.pkl'
 
